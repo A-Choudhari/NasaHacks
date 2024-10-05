@@ -1,0 +1,35 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    <h2><strong>Apply as a Doctor</strong></h2>
+    <br>
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+    <form action="{% url 'new_doctor' %}" method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <div>Username:</div>
+            <a autofocus class="form-control">{{ request.user }}</a>
+        </div>
+        <br>
+        <div class="form-group">
+            <div>Type of Doctor:</div>
+            <select class="form-control" name="title" required>
+                <option selected disabled>Select One</option>
+                {% for type in types %}
+                    <option>{{ type.titles }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <br>
+        <div class="form-group">
+            <div>Submit Your Degree:</div>
+            <input class="form-control" type="file" id="myFile" name="filename" required>
+        </div>
+        <input class="btn btn-primary" type="submit" value="Submit">
+    </form>
+
+
+{% endblock %}
