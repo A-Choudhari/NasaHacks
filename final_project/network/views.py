@@ -14,6 +14,7 @@ from pystac_client import Client
 import pandas as pd
 from openai import OpenAI
 
+
 # Provide the STAC and RASTER API endpoints
 STAC_API_URL = "https://earth.gov/ghgcenter/api/stac"
 RASTER_API_URL = "https://earth.gov/ghgcenter/api/raster"
@@ -100,53 +101,126 @@ def get_item_count(collection_id):
 
 
 def receiveNews(request):
-    country = User.objects.get(user=request.user.id).country
-    url = (f'https://newsapi.org/v2/everything?'
-       'q=CO2 Emission in {country}&'
-       'from=2024-10-01&'
-       'sortBy=popularity&'
-       'apiKey=020f247b2f7d4945b16501d01ab185e7')
+    if request.user.is_authenticated:
+        country = User.objects.get(id=request.user.id).country
+        print(country)
+        # print(country)
+        url = (f'https://newsapi.org/v2/everything?'
+        'q=CO2 Emission in {country}&'
+        'from=2024-10-01&'
+        'sortBy=popularity&'
+        'apiKey=020f247b2f7d4945b16501d01ab185e7')
 
-    response = requests.get(url)
-    result = response.json
-    return result
+        response = requests.get(url)
+        result = response.json()
+        # Check if 'articles' exist in the result
+        if "articles" in result:
+            articles = result["articles"]
+            # Convert articles to a list of dictionaries or do whatever you need with them
+            # article_dicts = [{'title': article['title'], 'author': article['author']} for article in articles]
+            output = json.dumps(result.get('articles'), indent=4)  # Serialize the articles to JSON
+            
+            # Print the serialized articles
+            # print("Articles:\n", output)
+            return result.get('articles')
+    else:
+        return ''
 
 
 def locationMarkers(request, news):
-    country = User.objects.get(id=request.user.id)
-    data = pd.DataFrame(columns=['latitude', 'longitude', 'popup'])
-    for new in news:
-        json_string = json.dumps(new)
-        # API KEY for OPENAI
-        client = OpenAI(api_key="")
-        completion = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are figuring out the longitude and latitude of where these major CO2 emission events are happening."},
-                {
-                    "role": "user",
-                    "content": f"""
-                    Process the information below and give me 3 things. Each value should be on a new line and the value itself, no other information.
-                    The first piece of information is give the latitude of where this is happening in the {country}.
-                    Second piece of information is the giv the longitude of where this is happening in {country}.
-                    Third information is generate HTML code to showcase the news report as a popup. 
-                    I want the very top of popup to have a urlToImage, then the title should have a hyperlink to the news article, and finally a quick 1-2 sentence summary of what happened in relation to CO2 emissions.
-                    {json_string}
-                    """
-                }
-            ]
-        )
-        response_lines = completion.choices[0].message.content
-        print(response_lines)
-        # Extract each value (assuming the format will always have three lines)
-        latitude = response_lines[0].strip()   # First line is latitude
-        longitude = response_lines[1].strip()  # Second line is longitude
-        html_popup = "\n".join(response_lines[2:]).strip()  # Remaining lines form the HTML code
-        # Add the extracted data to the dataframe
-        data = data.append({
-            'latitude': latitude,
-            'longitude': longitude,
-            'popup': html_popup
-        }, ignore_index=True)
+    if request.user.is_authenticated:
+        country = User.objects.get(id=request.user.id).country
+        data = pd.DataFrame(columns=['latitude', 'longitude', 'popup'])
+        for new in news:
+            json_string = json.dumps(new)
+            print(json_string)
 
-    return data
+            # API KEY for OPENAI
+            client = OpenAI(api_key="")
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are figuring out the longitude and latitude of where these major CO2 emission events are happening."},
+                    {
+                        "role": "user",
+                        "content": f"""
+                        Process the information below and give me 3 things. Each value should be on a new line and the value itself, no other information.
+                        The first piece of information is give the latitude of where this is happening in the {country}.
+                        Second piece of information is the giv the longitude of where this is happening in {country}.
+                        Third information is generate HTML code to showcase the news report as a popup. 
+                        I want the very top of popup to have a urlToImage, then the title should have a hyperlink to the news article, and finally a quick 1-2 sentence summary of what happened in relation to CO2 emissions.
+                        {json_string}
+                        """
+                    }
+                ]
+            )
+            response_lines = completion.choices[0].message.content
+            print(response_lines)
+            # Extract each value (assuming the format will always have three lines)
+            latitude = response_lines[0].strip()   # First line is latitude
+            longitude = response_lines[1].strip()  # Second line is longitude
+            html_popup = "\n".join(response_lines[2:]).strip()  # Remaining lines form the HTML code
+            # Add the extracted data to the dataframe
+            data = data.append({
+                'latitude': latitude,
+                'longitude': longitude,
+                'popup': html_popup
+            }, ignore_index=True)
+
+        return data
+    else:
+        return ''
+
+
+
+def login_view(request):
+    if request.method == "POST":
+
+        # Attempt to sign user in
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+
+        # Check if authentication successful
+        if user is not None:
+            login(request, user)
+            return HttpResponseRedirect(reverse("index"))
+        else:
+            return render(request, "network/login.html", {
+                "message": "Invalid username and/or password."
+            })
+    else:
+        return render(request, "network/login.html")
+
+
+def logout_view(request):
+    logout(request)
+    return HttpResponseRedirect(reverse("index"))
+
+
+def register(request):
+    if request.method == "POST":
+        username = request.POST["username"]
+        email = request.POST["email"]
+        country = request.POST["country"]
+        # Ensure password matches confirmation
+        password = request.POST["password"]
+        confirmation = request.POST["confirmation"]
+        if password != confirmation:
+            return render(request, "network/register.html", {
+                "message": "Passwords must match."
+            })
+
+        # Attempt to create new user
+        try:
+            user = User.objects.create_user(username, email, password)
+            user.country = country
+            user.save()
+        except IntegrityError:
+            return render(request, "network/register.html", {
+                "message": "Username already taken."
+            })
+        login(request, user)
+        return HttpResponseRedirect(reverse("index"))
+    else:
+        return render(request, "network/register.html")

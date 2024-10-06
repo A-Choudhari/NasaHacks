@@ -4,4 +4,21 @@ from uuid import uuid4
 
 
 class User(AbstractUser):
-    country = models.CharField(max_length=16, default = uuid4, null=False, blank=False)
+    COUNTRIES = [
+        ('US', 'United States'),
+        ('CA', 'Canada'),
+        ('GB', 'United Kingdom'),
+        ('DE', 'Germany'),
+        ('FR', 'France'),
+        ('IT', 'Italy'),
+        ('ES', 'Spain'),
+        ('MX', 'Mexico'),
+        ('IN', 'India'),
+        ('CN', 'China'),
+        ('JP', 'Japan'),
+        ('BR', 'Brazil'),
+        ('AU', 'Australia'),
+        ('RU', 'Russia'),
+        # Add more countries as needed
+    ]
+    country = models.CharField(max_length=2, choices=COUNTRIES, default='US')
