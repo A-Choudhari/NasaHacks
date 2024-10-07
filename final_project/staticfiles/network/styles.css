@@ -1,0 +1,110 @@
+/* General body styling to create a cohesive earthy theme */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif; /* Smooth, modern sans-serif font */
+    background-color: #f2efe6; /* Warm, earthy beige */
+    color: #4d4d4d; /* Soft dark color for text */
+}
+
+/* Styling the map container */
+.map-container {
+    border: 3px solid #8b5e34; /* Earthy brown border */
+    border-radius: 15px; /* Rounded corners for a softer look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    overflow: hidden;
+}
+
+/* Add margin to all elements with the 'margin' class */
+.margin {
+    margin: 10px;
+}
+
+/* Accent colors for different elements */
+.accent {
+    background-color: #8b5e34; /* Earthy brown accent color */
+    color: white;
+}
+
+.green-accent {
+    background-color: #5a9367; /* Earthy green accent color */
+    color: white;
+}
+
+/* Border styling for aesthetic elements */
+.border {
+    border-style: solid;
+    border-color: #8b5e34;
+    border-width: 2px;
+}
+
+/* Buttons and interaction elements */
+button {
+    padding: 10px 20px;
+    border-radius: 25px;
+    background-color: #5a9367; /* Earthy green for buttons */
+    color: white;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Slight shadow for buttons */
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #6ba577; /* Slightly lighter green on hover */
+}
+
+.red {
+    background-color: #c94c4c; /* Softer red tone for errors or warnings */
+}
+
+/* Add smooth transitions to hover states for interactivity */
+button, .map-container {
+    transition: all 0.3s ease;
+}
+
+button:hover, .map-container:hover {
+    transform: scale(1.02); /* Subtle zoom on hover for interactivity */
+}
+
+/* Text styling for headers or other key elements */
+h1, h2, h3, h4, h5, h6 {
+    color: #4d4d4d; /* Darker earthy tone */
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Add optional background textures or gradients */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://www.transparenttextures.com/patterns/wood.png'); /* Subtle wood texture background */
+    opacity: 0.05; /* Low opacity for a soft look */
+    z-index: -1;
+}
+
+/* Speech bubble styles */
+.speech-bubble {
+    position: relative;
+    background: #f0f0f0; /* Light background color */
+    border: 1px solid #ccc; /* Border color */
+    border-radius: 15px; /* Rounded corners */
+    padding: 10px 15px; /* Padding inside the bubble */
+    margin: 10px 0; /* Margin between bubbles */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Slight shadow */
+}
+
+.speech-bubble:after {
+    content: '';
+    position: absolute;
+    bottom: 100%; /* Position above the bubble */
+    left: 20px; /* Position slightly to the left */
+    margin-left: -10px; /* Adjust for arrow */
+    border-width: 10px; /* Size of the arrow */
+    border-style: solid;
+    border-color: transparent transparent #f0f0f0 transparent; /* Color of the arrow */
+}

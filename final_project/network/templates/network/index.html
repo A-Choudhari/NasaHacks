@@ -1,11 +1,45 @@
 {% extends "network/layout.html" %} {% block body %}
 
+<style>
+  .map-container {
+    width: 100%;
+    height: 600px;
+    margin-bottom: 40px;
+  }
+
+  #map {
+    width: 100%;
+    height: 100%;
+  }
+
+  .posts-container {
+    padding-top: 20px;
+  }
+
+  .post-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .red {
+    background-color: red;
+  }
+
+  .post-content {
+    flex-grow: 1;
+  }
+
+  .post-footer {
+    margin-top: auto;
+  }
+</style>
+
 <script>
   function text_change(id) {
     const new_text = document.getElementById(`new_text_${id}`).value;
     const old_text = document.getElementById(`text_${id}`);
     const modal = document.getElementById(`edit_post_${id}`);
-    console.log(new_text);
     fetch(`/edit/${id}`, {
       method: "POST",
       headers: {
@@ -18,7 +52,6 @@
     })
       .then((response) => response.json())
       .then((result) => {
-        console.log(result);
         old_text.innerHTML = new_text;
         modal.classList.remove("show");
         modal.setAttribute("aria-hidden", "true");
@@ -36,8 +69,7 @@
     const like_button = document.getElementById(`like_${id}`);
     const like_number = document.getElementById(`likes_${id}`);
     var number_like = parseInt(like_number.innerHTML);
-    console.log(id);
-    fetch(`like/${id}`, {
+    fetch(`/like/${id}`, {
       method: "PUT",
       headers: {
         "Content-type": "application/json",
@@ -49,20 +81,17 @@
     })
       .then((response) => response.json())
       .then((result) => {
-        // Print result
-        console.log(result);
-        like_button.classList.add("red");
+        like_button.classList.add("red"); // Change button to red
+        like_button.setAttribute("onclick", `unlike(${id})`); // Update the onclick event
         like_number.innerHTML = number_like + 1;
-        console.log(like_number.innerHTML);
       });
   }
 
   function unlike(id) {
-    console.log(id);
     const like_button = document.getElementById(`like_${id}`);
     const like_number = document.getElementById(`likes_${id}`);
     var number_like = parseInt(like_number.innerHTML);
-    fetch(`like/${id}`, {
+    fetch(`/like/${id}`, {
       method: "PUT",
       headers: {
         "Content-type": "application/json",
@@ -74,117 +103,146 @@
     })
       .then((response) => response.json())
       .then((result) => {
-        // Print result
-        console.log(result);
-        like_button.classList.remove("red");
+        like_button.classList.remove("red"); // Change button back to default
+        like_button.setAttribute("onclick", `like(${id})`); // Update the onclick event
         like_number.innerHTML = number_like - 1;
-        console.log(like_number.innerHTML);
       });
   }
 </script>
 
 <!-- Map Container -->
-<div
-  style="
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-  "
->
-  <div style="width: 60%; height: 60%" id="map">{{ map_html|safe }}</div>
+<div class="map-container">
+  <div id="map">{{ map_html|safe }}</div>
 </div>
 
 <!-- Include Leaflet JS for Folium maps -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-<h1><strong>All Posts</strong></h1>
-<div id="post">
-  {% for post in posts %}
-  <div class="border container">
-    <h5>
-      <a href="{% url 'profile' post.user.id %}">{{ post.user.username }}</a>
-    </h5>
-    <p id="text_{{ post.id }}">{{ post.text }}</p>
-    <p>{{ post.timestamp }}</p>
+<br /><br />
 
-    {% if request.user == post.user %}
-    <button
-      type="button"
-      class="btn btn-primary"
-      data-bs-toggle="modal"
-      data-bs-target="#edit_post_{{ post.id }}"
-    >
-      Edit
-    </button>
-
-    <div
-      class="modal"
-      aria-hidden="true"
-      id="edit_post_{{ post.id }}"
-      aria-labelledby="edit_post_{{ post.id }}_label"
-      tabindex="-1"
-      role="dialog"
-    >
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Post</h5>
+<!-- Posts Container -->
+<div class="posts-container">
+  <h1><strong>All Posts</strong></h1>
+  <div class="container">
+    <div class="row">
+      {% for post in posts %}
+      <div class="col-md-3 mb-4">
+        <div class="post-card border rounded p-3 shadow-sm">
+          <div class="post-content">
+            <h5>
+              <a href="{% url 'profile' post.user.id %}"
+                >{{ post.user.username }}</a
+              >
+            </h5>
+            <div class="speech-bubble">
+              <p id="text_{{ post.id }}">{{ post.text }}</p>
+            </div>
+            <p class="text-muted">{{ post.timestamp }}</p>
+          </div>
+          <div class="post-footer">
+            {% if request.user == post.user %}
             <button
               type="button"
-              class="close"
-              data-dismiss="modal"
-              aria-label="Close"
+              class="btn btn-primary btn-sm"
+              data-bs-toggle="modal"
+              data-bs-target="#edit_post_{{ post.id }}"
             >
-              <span aria-hidden="true">&times;</span>
+              Edit
             </button>
-          </div>
-          <div class="modal-body">
-            <textarea
-              cols="50"
-              rows="10"
-              id="new_text_{{ post.id }}"
-              name="new_text"
+
+            <!-- Edit Modal -->
+            <div
+              class="modal fade"
+              id="edit_post_{{ post.id }}"
+              tabindex="-1"
+              role="dialog"
+              aria-labelledby="edit_post_{{ post.id }}_label"
+              aria-hidden="true"
             >
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Edit Post</h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <textarea
+                      cols="50"
+                      rows="5"
+                      id="new_text_{{ post.id }}"
+                      name="new_text"
+                      class="form-control"
+                    >
 {{ post.text }}</textarea
-            >
-          </div>
-          <div class="modal-footer">
+                    >
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-primary"
+                      id="change"
+                      onclick="text_change({{ post.id }})"
+                    >
+                      Save changes
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% else %} {% if user.is_authenticated %} {% if post.id in likes %}
             <button
-              type="button"
-              class="btn btn-primary"
-              id="change"
-              onclick="text_change({{ post.id }})"
+              class="btn btn-danger red"
+              id="like_{{ post.id }}"
+              onclick="unlike({{ post.id }})"
             >
-              Save changes
+              &#128077;
             </button>
+            {% else %}
             <button
+              class="btn btn-outline-success"
+              id="like_{{ post.id }}"
               type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
+              onclick="like({{ post.id }})"
             >
-              Close
+              &#128077;
             </button>
+            {% endif %} {% endif %} {% endif %}
+            <div style="display: flex; align-items: center">
+              <div style="margin-right: 10px" id="likes_{{ post.id }}">
+                {{ post.likes }}
+              </div>
+              <span>likes</span>
+            </div>
           </div>
         </div>
       </div>
+      {% endfor %}
     </div>
-    {% else %} {% if user.is_authenticated %} {% if post.id in likes %}
-    <button class="red" id="like_{{ post.id }}" onclick="unlike({{ post.id }})">
-      ♡
-    </button>
-    {% else %}
-    <button id="like_{{ post.id }}" onclick="like({{ post.id }})">♡</button>
-    {% endif %} {% endif %} {% endif %}
-    <div id="likes_{{ post.id }}">{{ post.likes }}</div>
-    <div>likes</div>
   </div>
-  {% endfor %}
 </div>
+
 {% if posts.has_previous %}
-<button>
-  <a href="?page={{ posts.previous_page_number }}">Previous Page</a>
+<button class="btn btn-secondary">
+  <a class="text-white" href="?page={{ posts.previous_page_number }}"
+    >Previous Page</a
+  >
 </button>
 {% endif %} {% if posts.has_next %}
-<button><a href="?page={{ posts.next_page_number }}">Next Page</a></button>
+<button class="btn btn-secondary">
+  <a class="text-white" href="?page={{ posts.next_page_number }}">Next Page</a>
+</button>
 {% endif %} {% endblock %}

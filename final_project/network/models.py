@@ -4,7 +4,7 @@ from django.db import models
 
 class User(AbstractUser):
     COUNTRIES = [
-        ('US', 'United States'),
+        ('USA', 'United States'),
         ('CA', 'Canada'),
         ('GB', 'United Kingdom'),
         ('DE', 'Germany'),
@@ -20,7 +20,7 @@ class User(AbstractUser):
         ('RU', 'Russia'),
         # Add more countries as needed
     ]
-    country = models.CharField(max_length=2, choices=COUNTRIES, default='US')
+    country = models.CharField(max_length=3, choices=COUNTRIES, default='USA')
 
 
 class Post(models.Model):
