@@ -25,7 +25,7 @@ SECRET_KEY = '13kl@xtukpwe&xj2xoysxe9_6=tf@f8ewxer5n&ifnd46+6$%8'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1:8000/"]
+CSRF_TRUSTED_ORIGINS = ["https://a-choudhari-code50-88554618-wr5gx47pqcg4xg-8000.preview.app.github.dev/"]
 
 
 # Application definition

@@ -18,20 +18,20 @@
     />
   </div>
   <div class="form-group">
+    <input
+      class="form-control"
+      type="email"
+      name="email"
+      placeholder="Email Address"
+    />
+  </div>
+  <div class="form-group">
     <select class="form-control" name="country">
       <option value="">Select Country</option>
-      {% for code, name in user.COUNTRIES %}
+      {% for code, name in User.countries %}
       <option value="{{ code }}">{{ name }}</option>
       {% endfor %}
     </select>
-  </div>
-  <div class="form-group">
-    <input
-      class="form-control"
-      type="text"
-      name="country"
-      placeholder="Country"
-    />
   </div>
   <div class="form-group">
     <input

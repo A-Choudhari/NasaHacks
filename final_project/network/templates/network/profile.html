@@ -1,0 +1,148 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+<script>
+   function text_change(id) {
+        const new_text = document.getElementById(`new_text_${id}`).value;
+        const old_text = document.getElementById(`text_${id}`);
+        const modal = document.getElementById(`edit_post_${id}`);
+        console.log(new_text);
+        fetch(`/edit/${id}`, {
+            method: 'POST',
+            headers: {"Content-type": "application/json", "X-CSRFtoken":"{{ csrf_token }}"},
+            body: JSON.stringify({
+               text: new_text
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            console.log(result);
+             old_text.innerHTML = new_text;
+             modal.classList.remove('show');
+             modal.setAttribute('aria-hidden','true');
+             modal.setAttribute('style','display:none');
+
+             const modalbackdrop = document.getElementsByClassName('modal-backdrop');
+
+             for (let i=0; i< modalbackdrop.length; i++) {
+                document.body.removeChild(modalbackdrop[i]);
+             };
+        });
+    }
+
+    function like(id) {
+        console.log(id);
+        const like_button = document.getElementById(`like_${id}`);
+        const like_number = document.getElementById(`likes_${id}`);
+        var number_like = parseInt(like_number.innerHTML);
+        fetch(`like/${id}`, {
+            method: 'PUT',
+            headers: {"Content-type": "application/json", "X-CSRFtoken":"{{ csrf_token }}"},
+            body: JSON.stringify({
+                like: true
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            // Print result
+            console.log(result);
+            like_button.classList.add('red');
+            like_number.innerHTML = number_like + 1;
+            console.log(like_number.innerHTML);
+        })
+    }
+
+    function unlike(id) {
+        console.log(id);
+        const like_button = document.getElementById(`like_${id}`);
+        const like_number = document.getElementById(`likes_${id}`);
+        var number_like = parseInt(like_number.innerHTML);
+        fetch(`like/${id}`, {
+            method: 'PUT',
+            headers: {"Content-type": "application/json", "X-CSRFtoken":"{{ csrf_token }}"},
+            body: JSON.stringify({
+                like: false
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            // Print result
+            console.log(result);
+            like_button.classList.remove('red');
+            like_number.innerHTML = number_like - 1;
+            console.log(like_number.innerHTML);
+        });
+    }
+</script>
+
+    <h1>{{ profile.username }}</h1>
+    <div>{{ following }} Following   {{ followed|length }} Followers</div>
+    {% if user.is_authenticated %}
+        {% if request.user != profile %}
+            {% if user_follow %}
+                <form action="{% url 'unfollow' %}" method="post">
+                    {% csrf_token %}
+                    <input name="unfollowed" type="hidden" value="{{ profile.id }}">
+                    <input type="submit" value="Unfollow">
+            {% else %}
+                <form action="{% url 'follow' %}" method="post">
+                    {% csrf_token %}
+                    <input name="followed" type="hidden" value="{{ profile.id }}">
+                    <input type="submit" value="Follow">
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    {% for post in posts %}
+        <div class="border container">
+            <h5><a href="{% url 'profile' post.user.id %}">{{ post.user.username }}</a></h5>
+            <p id="text_{{ post.id }}">{{ post.text }}</p>
+            <p>{{ post.timestamp }}</p>
+
+            {% if request.user == post.user %}
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#edit_post_{{ post.id }}">
+                    Edit
+                </button>
+
+                <div class="modal" aria-hidden="true" id="edit_post_{{ post.id }}" aria-labelledby="edit_post_{{ post.id }}_label" tabindex="-1" role="dialog">
+                 <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                   <div class="modal-header">
+                    <h5 class="modal-title">Edit Post</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                   </div>
+                    <div class="modal-body">
+                       <textarea cols="50" rows="10" id="new_text_{{ post.id }}" name="new_text">{{ post.text }}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                       <button type="button" class="btn btn-primary" id="change" onclick="text_change({{ post.id }})">Save changes</button>
+                       <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                   </div>
+                  </div>
+                  </div>
+                {% else %}
+                    {% if user.is_authenticated %}
+                        {% if post.id in likes %}
+                            <button class="red" id="like_{{ post.id }}" onclick="unlike({{ post.id }})">♡</button>
+                        {% else %}
+                            <button id="like_{{ post.id }}" onclick="like({{ post.id }})">♡</button>
+                        {% endif %}
+
+                    {% endif %}
+                {% endif %}
+                <div id="likes_{{ post.id }}">{{ post.likes }}</div>
+                <div>likes</div>
+            </div>
+
+        {% endfor %}
+    {% if posts.has_previous %}
+        <button><a href="?page={{ posts.previous_page_number }}">Previous Page</a></button>
+    {% endif %}
+    {% if posts.has_next %}
+        <button><a href="?page={{ posts.next_page_number }}">Next Page</a></button>
+    {% endif %}
+
+{% endblock %}
